@@ -859,6 +859,7 @@ uruguay
 usd4000
 userregister
 uzbekistan
+v_show
 vanuatu
 vatican
 vaticancity
