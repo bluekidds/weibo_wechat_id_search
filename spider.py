@@ -293,9 +293,12 @@ def check_weibo_cookies():
 
 # 可能的微信帳號過濾器，傳入文章內容，傳出帳號列表
 def possible_wechat_filter(content='', pre_out=set()):
+    #print(content)
+    improve_re = r'((群|wechat|[微VvＶ][信XxＸ]?)[：:]?\ ?.{6,20})'
     phone_re = r'((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}'
     wechat_re = r'[a-zA-Z]{1}[-_a-zA-Z0-9]{5,19}'
-    qq_re = r'[1-9]\d{9,11}'
+    wechat_exclude_phone_re = r'^[微VvＶ][信XxＸ]?[：:]?\ ?\d{11}$'
+    #qq_re = r'[1-9]\d{9,11}'
     output = pre_out
 
     try:
@@ -303,18 +306,23 @@ def possible_wechat_filter(content='', pre_out=set()):
         for num, match in enumerate(matches):
             output.add(match.group().lower())
 
-        matches = re.finditer(wechat_re, content)
-        for num, match in enumerate(matches):
-            output.add(match.group().lower())
+        improve_matches = re.finditer(improve_re, content)
+        for improve_num, improve_match in enumerate(improve_matches):
+            improved_content = improve_match.group()
 
-        matches = re.finditer(qq_re, content)
-        for num, match in enumerate(matches):
-            output.add(match.group().lower())
+            matches = re.finditer(wechat_re, improved_content)
+            for num, match in enumerate(matches):
+                if not wechat_exclude_phone_re.match(match.group().lower()):
+                    output.add(match.group().lower())
 
-        output -= WORDS_FILTER    
-        for account in output:
-            if len(set(account)) == 1:
-                output.remove(account)
+            #matches = re.finditer(qq_re, improved_content)
+            #for num, match in enumerate(matches):
+            #    output.add(match.group().lower())
+
+            output -= WORDS_FILTER    
+            for account in output:
+                if len(set(account)) == 1:
+                    output.remove(account)
     except:
         pass
 
@@ -470,5 +478,4 @@ while True:
         print('[FETCHER_QUEUE] Job remaining: ' + str(FETCHER_QUEUE.qsize()))
     if LOG_PARSER_REMAINING:
         print('[PARSER_QUEUE] Job remaining: ' + str(PARSER_QUEUE.qsize()))
-    print(threading.enumerate())
 
